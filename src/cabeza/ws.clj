@@ -1,6 +1,8 @@
 (ns cabeza.ws 
 	(:use [cabeza sh util])
-	(:import [javax.xml.ws Endpoint com.sun.net.httpserver HttpServer] 
+	(:import [javax.xml.ws Endpoint ]
+			[org.eclipse.jetty.server Handler]
+			[org.mortbay.jetty.j2sehttpspi JettyHttpServerProvider]
 			[java.net URLClassLoader URL InetSocketAddress]))
 
 (def *ws-server-folder* "generated/server")
@@ -11,6 +13,8 @@
 (def *ws-name*)
 (def *ws-methods*)
 (def *ws-services* (ref {}))
+
+(System/setProperty "com.sun.net.httpserver.HttpServerProvider" "org.mortbay.jetty.j2sehttpspi.JettyHttpServerProvider")
 
 (defn ensure-folder[ folder ]
 	(when-not (-> (java.io.File. folder) (#(or (.exists %1) (.mkdirs %1))))
@@ -38,12 +42,6 @@
 	(let[ java-packge (.replaceAll package "\\." "/") ]
 		(when (not= (sh "javac" "-cp" (System/getProperty "java.class.path") "-d" *ws-server-folder* (get-raw-ws-path package name)) 0)
 			(throw (Exception. (str "Failed to compile " name " web service"))))
-
-		(let[ srv (HttpServer/create (InetSocketAddress. 8183) 10) ]
-				(.start srv)
-					
-			)
-
 		(Endpoint/publish (str endpoint (.toLowerCase name) )
 			(.newInstance (.loadClass *ws-server-classloader* (str package "." name))))))
 
@@ -55,7 +53,7 @@
 	(ensure-folder (str *ws-server-folder* "/"	(.replaceAll package "\\." "/")))
 	(binding [ *ws-package* package *ws-name* name *ws-methods* (get-in @*ws-services* [ package name ] ) ]
 		(spit (get-raw-ws-path package name) (with-out-str
-		(load-data "ws.template")))))
+			(load-file "resources/ws.template")))))
 
 (defn get-ws-client-stub[ package service-stub-name ]
 	(.newInstance (.loadClass *ws-client-classloader* (str package "." service-stub-name))) )

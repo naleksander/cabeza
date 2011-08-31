@@ -21,7 +21,7 @@
 
 
 (defn load-data[ path ]
-	(load-string (slurp path)))
+	(read-string (slurp path)))
 
 (defn funnel []
 	 (let [q (java.util.concurrent.SynchronousQueue.) s (Object.)]
