@@ -1,0 +1,49 @@
+(println (str "package " *ws-package* ";
+
+import javax.jws.WebMethod;
+import javax.jws.WebService;
+
+import clojure.lang.Keyword;
+import clojure.lang.RT;
+import clojure.lang.Symbol;
+import clojure.lang.Var;
+
+@WebService
+public class " *ws-name* " { 
+	
+
+	"))
+
+
+(doseq [  [method details] *ws-methods* ]
+
+	(println (str "
+	
+	    @WebMethod
+	    public " (:return details) " " method "(" (apply str (interpose ", " (map #(apply str (interpose " " %)) (:args details) )  ) )   ") throws RuntimeException {
+
+			try {
+
+				/*System.out.println( \"Invoking "  method  " with \" + "  (apply str (interpose " + \", \" + "  (map second (:args details))   ) ) "  );*/
+
+			Var service = RT.var(\"bpml.ws\", \"dispatch-ws-call\" );
+
+	        " (when (not= (:return details) 'void) (str "return (" (:return details) ")")) "service.invoke(  \"" *ws-package* "\", \"" *ws-name* "\", " 
+
+				(apply str (interpose ", " (cons (str \" method \" ) (map second (:args details) ))  ) )
+
+				" );
+		
+
+			} catch(Exception e) {
+				throw new RuntimeException( \"Failed to call clojure method for web service call\", e );
+			}
+	    }
+	"))
+
+)
+
+
+(println "
+}
+")

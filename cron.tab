@@ -1,0 +1,7 @@
+
+
+ {
+	0 [ "* * * * *" (fn[] (println "each minute")) ]
+	1 [ "*/2 * * * *" (fn[] (println "each even")) ]
+	2 [ "*/5 * * * *" (fn[] (println "each five minutes")) ]
+	}
